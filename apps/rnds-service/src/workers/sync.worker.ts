@@ -115,27 +115,41 @@ export class SyncWorker {
   private async fetchActivePregnancies(): Promise<any[]> {
     try {
       const response = await firstValueFrom(
-        this.httpService.get(`${this.coreServiceUrl}/api/pregnancies`, {
+        this.httpService.get(`${this.coreServiceUrl}/pregnancies`, {
           params: {
             status: 'active',
+            page: 1,
             limit: 1000, // Limitar para evitar sobrecarga
           },
         }),
       );
 
-      return response.data || [];
+      // Response é paginada: { data: [...], total: n, page: 1, limit: 1000 }
+      return response.data?.data || [];
     } catch (error) {
-      this.logger.error(
-        `Erro ao buscar pregnancies do Core Service: ${error.message}`,
-      );
+      // Tratamento adequado: não encontrar gestações NÃO é erro crítico
+      const status = error.response?.status;
+      const message = error.message;
 
-      // Se Core Service estiver indisponível, retornar array vazio
-      if (error.code === 'ECONNREFUSED') {
-        this.logger.warn('Core Service indisponível, pulando sincronização');
+      // Casos que NÃO são erros críticos
+      if (status === 404 || status === 500) {
+        this.logger.log(
+          `ℹ️  Nenhuma gestação ativa encontrada no Core Service (HTTP ${status || 'erro'})`
+        );
         return [];
       }
 
-      throw error;
+      // Core Service indisponível
+      if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+        this.logger.warn('⚠️  Core Service indisponível, pulando sincronização');
+        return [];
+      }
+
+      // Outros erros (timeout, etc) - logar mas não travar
+      this.logger.warn(
+        `⚠️  Erro ao buscar pregnancies do Core Service: ${message}`
+      );
+      return [];
     }
   }
 

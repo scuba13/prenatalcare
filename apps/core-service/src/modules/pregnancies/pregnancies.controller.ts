@@ -26,12 +26,16 @@ export class PregnanciesController {
   @ApiOperation({ summary: 'Listar todas as gestações' })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
+  @ApiQuery({ name: 'status', required: false, enum: ['active', 'completed', 'terminated'], description: 'Filtrar por status' })
   @ApiResponse({ status: 200, description: 'Lista de gestações' })
   findAll(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
+    @Query('status') status?: 'active' | 'completed' | 'terminated',
   ) {
-    return this.pregnanciesService.findAll(page, limit);
+    const parsedPage = page ? parseInt(page.toString(), 10) : 1;
+    const parsedLimit = limit ? parseInt(limit.toString(), 10) : 20;
+    return this.pregnanciesService.findAll(parsedPage, parsedLimit, status);
   }
 
   @Get('active')

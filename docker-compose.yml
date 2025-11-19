@@ -121,6 +121,7 @@ services:
       DB_PASSWORD: postgres
       DB_NAME: rnds_sync
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
+      CORE_SERVICE_URL: http://core-service:3001
       # RNDS Configuration (usando mock em desenvolvimento)
       RNDS_BASE_URL: http://rnds-mock:3003
       RNDS_AUTH_URL: http://rnds-mock:3003/oauth2/token
@@ -133,6 +134,33 @@ services:
       - postgres
       - rabbitmq
       - rnds-mock
+      - core-service
+
+  scheduling-service:
+    build:
+      context: .
+      dockerfile: apps/scheduling-service/Dockerfile
+    container_name: prenatal-scheduling-service
+    restart: unless-stopped
+    ports:
+      - "3004:3003"
+    environment:
+      NODE_ENV: production
+      PORT: 3003
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: prenatal_scheduling
+      DB_SYNCHRONIZE: "true"
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
+      ADAPTER_TYPE: mock
+      ADAPTER_RETRY_ATTEMPTS: 3
+    networks:
+      - prenatal-network
+    depends_on:
+      - postgres
+      - rabbitmq
 
 volumes:
   pgdata:
