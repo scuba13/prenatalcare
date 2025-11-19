@@ -1,0 +1,41 @@
+# Docker Compose override for development
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  core-service:
+    build:
+      target: dev
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+    volumes:
+      # Mount source code for hot reload
+      - ./apps/core-service:/app
+      # Prevent node_modules from being overwritten
+      - /app/node_modules
+    command: npm run start:dev
+
+  rnds-service:
+    build:
+      target: dev
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+    volumes:
+      # Mount source code for hot reload
+      - ./apps/rnds-service:/app
+      # Prevent node_modules from being overwritten
+      - /app/node_modules
+    command: npm run start:dev
+
+  # Enable debug ports for services
+  # Uncomment if you need to attach a debugger
+  # core-service:
+  #   ports:
+  #     - "9229:9229"
+  #   command: npm run start:debug
+
+  # rnds-service:
+  #   ports:
+  #     - "9230:9229"
+  #   command: npm run start:debug

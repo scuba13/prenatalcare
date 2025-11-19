@@ -1,0 +1,7 @@
+https://rnds-fhir.saude.gov.br/ImplementationGuide/rnds%EF%BF%BC
+
+https://rnds-fhir.saude.gov.br/StructureDefinition-BRProfissional-1.0.html%EF%BF%BC
+
+https://rnds-fhir.saude.gov.br/ImplementationGuide/rnds/package.tgz%EF%BF%BC
+
+https://hl7.org.br/fhir/core/

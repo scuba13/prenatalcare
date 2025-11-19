@@ -1,0 +1,149 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: prenatal-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - prenatal-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: prenatal-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - prenatal-network
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: prenatal-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    volumes:
+      - rabbitmqdata:/var/lib/rabbitmq
+    networks:
+      - prenatal-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: prenatal-minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"   # API
+      - "9001:9001"   # Console
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - miniodata:/data
+    networks:
+      - prenatal-network
+
+  # Application Services - PRODUCTION MODE
+  # Mesma configuração usada no Railway para garantir paridade
+  core-service:
+    build:
+      context: .
+      dockerfile: apps/core-service/Dockerfile
+      target: production
+    container_name: prenatal-core-service
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: prenatal_core
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: admin
+      RABBITMQ_PASS: admin
+    networks:
+      - prenatal-network
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+
+  rnds-mock:
+    build:
+      context: ./apps/rnds-mock
+      dockerfile: Dockerfile
+      target: dev
+    container_name: prenatal-rnds-mock
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    environment:
+      NODE_ENV: development
+      PORT: 3003
+    networks:
+      - prenatal-network
+
+  rnds-service:
+    build:
+      context: .
+      dockerfile: apps/rnds-service/Dockerfile
+      target: production
+    container_name: prenatal-rnds-service
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: rnds_sync
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
+      # RNDS Configuration (usando mock em desenvolvimento)
+      RNDS_BASE_URL: http://rnds-mock:3003
+      RNDS_AUTH_URL: http://rnds-mock:3003/oauth2/token
+      RNDS_CLIENT_ID: mock-client
+      RNDS_CLIENT_SECRET: mock-secret
+      RNDS_USE_MTLS: "false"
+    networks:
+      - prenatal-network
+    depends_on:
+      - postgres
+      - rabbitmq
+      - rnds-mock
+
+volumes:
+  pgdata:
+    driver: local
+  redisdata:
+    driver: local
+  rabbitmqdata:
+    driver: local
+  miniodata:
+    driver: local
+
+networks:
+  prenatal-network:
+    driver: bridge
