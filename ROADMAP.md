@@ -19,7 +19,7 @@
 | [Fase 1: Setup e Fundações](#fase-1-setup-e-fundações) | ✅ | 7/7 | Semanas 1-2 |
 | [Fase 2: Core Service](#fase-2-core-service) | ✅ | 8/8 | Semanas 3-5 |
 | [Fase 3: RNDS Integration](#fase-3-rnds-integration-service) | ✅ | 11/11 | Semanas 6-8 |
-| [Fase 4: Scheduling Service](#fase-4-scheduling-service) | ⬜ | 0/6 | Semanas 9-10 |
+| [Fase 4: Scheduling Service](#fase-4-scheduling-service) | 🟡 | 1/8 | Semanas 9-10 |
 | [Fase 5: Notification Service](#fase-5-notification-service) | ⬜ | 0/7 | Semanas 11-12 |
 | [Fase 6: Auth Service](#fase-6-auth-service) | ⬜ | 0/6 | Semanas 13-14 |
 | [Fase 7: Web Médico](#fase-7-web-médico) | ⬜ | 0/8 | Semanas 15-17 |
@@ -27,7 +27,7 @@
 | [Fase 9: App Mobile](#fase-9-app-mobile) | ⬜ | 0/7 | Semanas 20-22 |
 | [Fase 10: Deploy e Produção](#fase-10-testes-segurança-e-deploy) | ⬜ | 0/8 | Semanas 23-24 |
 
-**Progresso Total:** 26/73 tarefas (35.6%) ✅ **Fases 1-3 Concluídas!**
+**Progresso Total:** 27/75 tarefas (36.0%) ✅ **Fases 1-3 Concluídas! Fase 4 em Progresso!**
 
 ---
 
@@ -876,156 +876,260 @@ curl http://localhost:3002/health
 ---
 
 ## Fase 4: Scheduling Service
-**Objetivo:** Sistema de agendamento de consultas e gestão de agenda médica
+**Objetivo:** Sistema de agendamento de consultas com arquitetura de adapters modulares
 
-**Status:** ⬜ Não iniciado | **Progresso:** 0/6 | **Prazo:** Semanas 9-10
+**Status:** 🟡 Em Progresso | **Progresso:** 1/8 | **Prazo:** Semanas 9-10
+
+**Arquitetura:** Core Service → Scheduling Service → Adapter → Sistema Hospitalar
+
+> **Nota**: O Scheduling Service usa **arquitetura de adapters** para permitir integração com diferentes sistemas hospitalares no futuro. Por hora, será implementado um **Mock Adapter** para desenvolvimento.
+
+**Documentação Detalhada:** [docs/SCHEDULING_SERVICE_ARCHITECTURE.md](./docs/SCHEDULING_SERVICE_ARCHITECTURE.md)
 
 ### Tarefas
 
-#### 4.1 Criar Entidades de Agendamento ⬜
-**Responsável:** _A definir_
-**Prazo:** _A definir_
+#### 4.1 Definir Arquitetura de Adapters ✅
+**Responsável:** Claude Code
+**Prazo:** 19/11/2025
 **Status:** ✅ Concluído
 
 **Checklist:**
-- [ ] Criar `src/entities/schedule.entity.ts`:
-  - [ ] `id`, `doctorId`, `dayOfWeek` (enum)
-  - [ ] `startTime`, `endTime` (time)
-  - [ ] `slotDuration` (int, minutos)
-  - [ ] `isActive` (boolean)
-- [ ] Criar `src/entities/appointment.entity.ts`:
-  - [ ] `id`, `pregnancyId`, `doctorId`
-  - [ ] `scheduledAt` (timestamp), `duration` (int)
-  - [ ] `status` (enum: scheduled, confirmed, cancelled, completed)
-  - [ ] `notes` (text)
+- [x] Documentar arquitetura de adapters (SCHEDULING_SERVICE_ARCHITECTURE.md)
+- [x] Definir interface `ISchedulingAdapter` padrão
+- [x] Planejar fluxo: Core → Scheduling → Adapter → Hospital
+- [x] Especificar modelo de dados (Appointment, SyncLog)
+- [x] Documentar retry, circuit breaker e healthcheck
+- [x] Planejar integração RabbitMQ e HTTP com Core Service
+
+**Artefatos:**
+- ✅ Documento completo de arquitetura criado
+- ✅ Interface ISchedulingAdapter especificada
+- ✅ Modelo de dados definido
+- ✅ Padrões de resiliência documentados
+
+---
+
+#### 4.2 Criar Entidades de Agendamento ⬜
+**Responsável:** _A definir_
+**Prazo:** _A definir_
+**Status:** ⬜ Não iniciado
+
+**Checklist:**
+- [ ] Criar `apps/scheduling-service/src/entities/appointment.entity.ts`:
+  - [ ] `id`, `externalId`, `adapterType`
+  - [ ] `patientId`, `professionalId`
+  - [ ] `scheduledAt`, `startedAt`, `completedAt`
+  - [ ] `status` (enum: PENDING, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, NO_SHOW)
+  - [ ] `notes`, `metadata` (jsonb para dados específicos do adapter)
+- [ ] Criar `apps/scheduling-service/src/entities/appointment-sync-log.entity.ts`:
+  - [ ] `id`, `appointmentId`, `adapterType`
+  - [ ] `operation` (CREATE, UPDATE, CANCEL, SYNC)
+  - [ ] `request`, `response` (jsonb)
+  - [ ] `success`, `error`
 - [ ] Criar migrations
 - [ ] Executar migrations
 
 **Artefatos:**
-- Entidades de agendamento criadas
+- Entidades TypeORM criadas
 - Migrations executadas
+- Database schema atualizado
 
 ---
 
-#### 4.2 Implementar Availability Service ⬜
+#### 4.3 Implementar Interface e Mock Adapter ⬜
 **Responsável:** _A definir_
 **Prazo:** _A definir_
-**Status:** ✅ Concluído
+**Status:** ⬜ Não iniciado
 
 **Checklist:**
-- [ ] Criar `src/services/availability.service.ts`
-- [ ] Implementar `getAvailableSlots(doctorId, date)`:
-  - [ ] Buscar schedule do médico para o dia da semana
-  - [ ] Gerar slots baseado em startTime/endTime/slotDuration
-  - [ ] Buscar appointments do dia
-  - [ ] Filtrar slots ocupados
+- [ ] Criar `apps/scheduling-service/src/adapters/scheduling-adapter.interface.ts`:
+  - [ ] Interface `ISchedulingAdapter`
+  - [ ] Métodos: createAppointment, updateAppointment, cancelAppointment
+  - [ ] Métodos: getAppointment, checkAvailability, healthCheck
+  - [ ] DTOs: CreateAppointmentDto, UpdateAppointmentDto, AvailabilityFilters
+- [ ] Criar `apps/scheduling-service/src/adapters/mock/mock-scheduling.adapter.ts`:
+  - [ ] Implementar `ISchedulingAdapter`
+  - [ ] Simular latência (100-500ms)
+  - [ ] Gerar slots de disponibilidade (8h-17h, 70% disponíveis)
+  - [ ] Armazenar em memória (Map)
+  - [ ] Simular erros ocasionais para testar retry
+- [ ] Criar testes unitários do Mock Adapter
+- [ ] Documentar como criar novos adapters
+
+**Artefatos:**
+- Interface ISchedulingAdapter funcional
+- Mock Adapter implementado e testado
+- Guia de criação de adapters
+
+---
+
+#### 4.4 Implementar Scheduling Service Core ⬜
+**Responsável:** _A definir_
+**Prazo:** _A definir_
+**Status:** ⬜ Não iniciado
+
+**Checklist:**
+- [ ] Criar `apps/scheduling-service/src/services/scheduling.service.ts`
+- [ ] Implementar `createAppointment(dto)`:
+  - [ ] Validar dados de entrada
+  - [ ] Chamar adapter.createAppointment()
+  - [ ] Salvar Appointment no banco
+  - [ ] Salvar log em AppointmentSyncLog
+  - [ ] Retornar resultado
+- [ ] Implementar `updateAppointment(id, dto)`:
+  - [ ] Buscar appointment existente
+  - [ ] Chamar adapter.updateAppointment()
+  - [ ] Atualizar no banco
+  - [ ] Salvar log
+- [ ] Implementar `cancelAppointment(id, reason)`:
+  - [ ] Atualizar status para CANCELLED
+  - [ ] Chamar adapter.cancelAppointment()
+  - [ ] Salvar log
+- [ ] Implementar `getAppointment(id)` e `getByPatient(patientId)`
+- [ ] Implementar `checkAvailability(filters)`:
+  - [ ] Chamar adapter.checkAvailability()
   - [ ] Retornar slots disponíveis
-- [ ] Implementar `getDayOfWeek(date)` helper
 - [ ] Criar testes unitários
 
 **Artefatos:**
-- Availability service funcional
-- Testes passando
+- Scheduling service funcional
+- Validação de regras de negócio
+- Testes unitários > 80%
 
 ---
 
-#### 4.3 Implementar Appointments Service ⬜
+#### 4.5 Implementar Retry e Circuit Breaker ⬜
 **Responsável:** _A definir_
 **Prazo:** _A definir_
-**Status:** ✅ Concluído
+**Status:** ⬜ Não iniciado
 
 **Checklist:**
-- [ ] Criar `src/services/appointments.service.ts`
-- [ ] Implementar `create(dto)`:
-  - [ ] Validar disponibilidade do slot
-  - [ ] Criar appointment se disponível
-  - [ ] Emitir evento `appointment.created`
-  - [ ] Retornar appointment
-- [ ] Implementar `cancel(id, reason)`:
-  - [ ] Atualizar status para cancelled
-  - [ ] Emitir evento `appointment.cancelled`
-- [ ] Implementar `reschedule(id, newDate)`
-- [ ] Implementar `complete(id)`
+- [ ] Criar `apps/scheduling-service/src/resilience/retry.service.ts`:
+  - [ ] Implementar retry com backoff exponencial (1s, 2s, 4s)
+  - [ ] Configurar max retries (3 tentativas)
+  - [ ] Salvar erros em AppointmentSyncLog
+- [ ] Criar `apps/scheduling-service/src/resilience/circuit-breaker.service.ts`:
+  - [ ] Estados: CLOSED, OPEN, HALF_OPEN
+  - [ ] Abrir após 5 falhas consecutivas
+  - [ ] Timeout de 60s para tentar HALF_OPEN
+  - [ ] Métricas de estado do circuit breaker
+- [ ] Integrar retry e circuit breaker no SchedulingService
+- [ ] Criar testes de resiliência
 
 **Artefatos:**
-- Appointments service funcional
-- Validação de conflitos implementada
+- Retry service funcional
+- Circuit breaker implementado
+- Sistema resiliente a falhas de adapters
 
 ---
 
-#### 4.4 Implementar Controllers ⬜
+#### 4.6 Implementar Controllers e Swagger ⬜
 **Responsável:** _A definir_
 **Prazo:** _A definir_
-**Status:** ✅ Concluído
+**Status:** ⬜ Não iniciado
 
 **Checklist:**
-- [ ] Criar `src/controllers/schedules.controller.ts`:
-  - [ ] GET `/api/v1/schedules/availability?doctorId=...&date=...`
-  - [ ] POST `/api/v1/schedules` (criar agenda médica)
-  - [ ] PUT `/api/v1/schedules/:id`
-- [ ] Criar `src/controllers/appointments.controller.ts`:
-  - [ ] POST `/api/v1/appointments` (agendar)
-  - [ ] PATCH `/api/v1/appointments/:id` (reagendar/cancelar)
-  - [ ] GET `/api/v1/appointments/patient/:id`
-  - [ ] GET `/api/v1/appointments/doctor/:id`
-- [ ] Documentar no Swagger
+- [ ] Criar `apps/scheduling-service/src/controllers/scheduling.controller.ts`:
+  - [ ] POST `/scheduling/appointments` (criar agendamento)
+  - [ ] GET `/scheduling/appointments/:id` (buscar agendamento)
+  - [ ] PUT `/scheduling/appointments/:id` (atualizar agendamento)
+  - [ ] DELETE `/scheduling/appointments/:id` (cancelar agendamento)
+  - [ ] GET `/scheduling/availability` (verificar disponibilidade)
+  - [ ] GET `/scheduling/appointments/patient/:id` (agendamentos de paciente)
+- [ ] Criar `apps/scheduling-service/src/controllers/health.controller.ts`:
+  - [ ] GET `/health` (status do serviço e adapter)
+  - [ ] Incluir circuit breaker state
+- [ ] Documentar no Swagger com @ApiOperation, @ApiResponse
+- [ ] Validar DTOs com class-validator
+- [ ] Testar endpoints manualmente
 
 **Artefatos:**
-- Controllers com rotas CRUD
+- Controllers REST completos
 - Swagger documentado
+- Validação de entrada implementada
 
 ---
 
-#### 4.5 Integrar RabbitMQ para Notificações ⬜
+#### 4.7 Integrar RabbitMQ com Core Service ⬜
 **Responsável:** _A definir_
 **Prazo:** _A definir_
-**Status:** ✅ Concluído
+**Status:** ⬜ Não iniciado
 
 **Checklist:**
-- [ ] Configurar exchange: `appointments` (tipo: topic)
-- [ ] Criar `src/events/appointment-events.listener.ts`
-- [ ] Implementar listeners:
-  - [ ] `@OnEvent('appointment.created')` → publish to RabbitMQ
-  - [ ] `@OnEvent('appointment.cancelled')` → publish to RabbitMQ
-  - [ ] `@OnEvent('appointment.rescheduled')` → publish to RabbitMQ
-- [ ] Testar publicação de eventos
+- [ ] Configurar filas RabbitMQ:
+  - [ ] `scheduling.create_appointment` (Core → Scheduling)
+  - [ ] `scheduling.cancel_appointment` (Core → Scheduling)
+  - [ ] `core.appointment_confirmed` (Scheduling → Core)
+  - [ ] `core.appointment_failed` (Scheduling → Core)
+  - [ ] `core.appointment_updated` (Scheduling → Core)
+- [ ] Criar `apps/scheduling-service/src/messaging/rabbitmq.service.ts`:
+  - [ ] Configurar exchange `scheduling` (tipo: topic)
+  - [ ] Implementar publisher
+  - [ ] Implementar consumer
+- [ ] Criar listeners para eventos:
+  - [ ] handleCreateAppointment(message)
+  - [ ] handleCancelAppointment(message)
+- [ ] Publicar eventos de resposta para Core Service:
+  - [ ] appointmentConfirmed(appointmentData)
+  - [ ] appointmentFailed(error)
+  - [ ] appointmentUpdated(appointmentData)
+- [ ] Criar testes de integração
 
 **Artefatos:**
-- Event listeners configurados
-- RabbitMQ recebendo eventos
+- RabbitMQ configurado
+- Mensageria assíncrona funcionando
+- Integração completa com Core Service
 
 ---
 
-#### 4.6 Testes E2E de Agendamento ⬜
+#### 4.8 Testes E2E e Configuração Docker ⬜
 **Responsável:** _A definir_
 **Prazo:** _A definir_
-**Status:** ✅ Concluído
+**Status:** ⬜ Não iniciado
 
 **Checklist:**
-- [ ] Criar `test/appointments.e2e-spec.ts`
+- [ ] Criar `apps/scheduling-service/test/scheduling.e2e-spec.ts`
 - [ ] Testar fluxo completo:
-  - [ ] Criar agenda médica
-  - [ ] Buscar disponibilidade
-  - [ ] Agendar consulta
+  - [ ] Verificar disponibilidade de slots
+  - [ ] Criar agendamento
+  - [ ] Verificar que slot foi ocupado
   - [ ] Tentar agendar no mesmo horário (deve falhar)
-  - [ ] Cancelar consulta
+  - [ ] Cancelar agendamento
   - [ ] Verificar slot disponível novamente
-- [ ] Verificar eventos RabbitMQ emitidos
+  - [ ] Testar retry após falha do adapter
+  - [ ] Testar circuit breaker abrindo após múltiplas falhas
+- [ ] Criar Dockerfile multi-stage (como RNDS Service)
+- [ ] Adicionar scheduling-service ao docker-compose.yml:
+  - [ ] Porta 3003
+  - [ ] Configurar variáveis de ambiente
+  - [ ] Dependências: postgres, rabbitmq
+- [ ] Testar build e execução local
+- [ ] Verificar logs estruturados com Winston
 
 **Artefatos:**
-- Testes E2E passando
-- Cobertura > 80%
+- Testes E2E passando (cobertura > 80%)
+- Docker configurado
+- Serviço rodando local e Railway-ready
 
 ---
 
 ### ✅ Critérios de Aceite - Fase 4
 
-- [x] Scheduling Service completo
-- [x] Disponibilidade de horários funcionando
-- [x] Agendamento com validação de conflitos
-- [x] Reagendamento e cancelamento
-- [x] Integração com RabbitMQ (eventos)
-- [x] Testes unitários > 80%
+- [ ] Interface ISchedulingAdapter definida e documentada
+- [ ] Mock Adapter implementado e testado
+- [ ] Scheduling Service core funcional
+- [ ] Entidades e migrations criadas
+- [ ] Retry com backoff exponencial funcionando
+- [ ] Circuit breaker protegendo contra falhas
+- [ ] Endpoints REST documentados no Swagger
+- [ ] Integração RabbitMQ com Core Service
+- [ ] Mensageria assíncrona (create, cancel, confirmed, failed, updated)
+- [ ] Health check do adapter funcionando
+- [ ] Testes unitários > 80%
+- [ ] Testes E2E passando
+- [ ] Docker configurado (local = produção)
+- [ ] Logs estruturados com Winston
+- [ ] Documentação completa de arquitetura
 
 **Revisor:** _A definir_
 **Data de Conclusão:** _____/_____/_____
