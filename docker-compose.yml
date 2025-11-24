@@ -143,7 +143,7 @@ services:
     container_name: prenatal-scheduling-service
     restart: unless-stopped
     ports:
-      - "3004:3003"
+      - "3003:3003"
     environment:
       NODE_ENV: production
       PORT: 3003
@@ -161,6 +161,37 @@ services:
     depends_on:
       - postgres
       - rabbitmq
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: apps/notification-service/Dockerfile
+    container_name: prenatal-notification-service
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    environment:
+      NODE_ENV: production
+      PORT: 3004
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_NAME: prenatal_notifications
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
+      CORE_SERVICE_URL: http://core-service:3001
+      SCHEDULING_SERVICE_URL: http://scheduling-service:3003
+      # Firebase (Mock Mode - deixar vazio)
+      FIREBASE_PROJECT_ID: ""
+      FIREBASE_CLIENT_EMAIL: ""
+      FIREBASE_PRIVATE_KEY: ""
+    networks:
+      - prenatal-network
+    depends_on:
+      - postgres
+      - rabbitmq
+      - core-service
+      - scheduling-service
 
 volumes:
   pgdata:
