@@ -1,16 +1,20 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard, RolesGuard, Roles, UserRole } from '@prenatal/common';
 import { PregnanciesService } from './pregnancies.service';
 import { CreatePregnancyDto } from './dto/create-pregnancy.dto';
 import { UpdatePregnancyDto } from './dto/update-pregnancy.dto';
 import { CompletePregnancyDto } from './dto/complete-pregnancy.dto';
 
 @ApiTags('Pregnancies')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('pregnancies')
 export class PregnanciesController {
   constructor(private readonly pregnanciesService: PregnanciesService) {}
 
   @Post()
+  @Roles(UserRole.MEDICO, UserRole.ADMIN)
   @ApiOperation({ summary: 'Criar nova gestação' })
   @ApiResponse({ status: 201, description: 'Gestação criada com sucesso' })
   @ApiResponse({ status: 404, description: 'Cidadão não encontrado' })

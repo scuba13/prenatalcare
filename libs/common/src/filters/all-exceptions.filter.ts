@@ -4,10 +4,20 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { AppLoggerService } from '../logger/logger.service';
-import { ErrorResponse } from '../interfaces/error-response.interface';
+
+interface ErrorResponse {
+  timestamp: string;
+  path: string;
+  method: string;
+  statusCode: number;
+  error: string;
+  message: string | string[];
+  requestId?: string;
+  stack?: string;
+}
 
 /**
  * Filter para capturar TODAS as exceptions
@@ -15,9 +25,9 @@ import { ErrorResponse } from '../interfaces/error-response.interface';
  */
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  constructor(private readonly logger: AppLoggerService) {
-    this.logger.setContext('AllExceptionsFilter');
-  }
+  private readonly logger = new Logger('AllExceptionsFilter');
+
+  constructor() {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
@@ -75,25 +85,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
     // Log crítico para erros 500
     if (status >= 500) {
       this.logger.error(
-        `💥 CRITICAL ERROR ${status}: ${error}`,
+        `💥 CRITICAL ERROR ${status}: ${error} ${message}`,
         stack,
-        {
-          path: request.url,
-          method: request.method,
-          statusCode: status,
-          message,
-          requestId: errorResponse.requestId,
-          exception: exception instanceof Error ? exception.constructor.name : typeof exception,
-        },
       );
     } else {
-      this.logger.warn(`⚠️  Client Error ${status}: ${error}`, {
-        path: request.url,
-        method: request.method,
-        statusCode: status,
-        message,
-        requestId: errorResponse.requestId,
-      });
+      this.logger.warn(`⚠️  Client Error ${status}: ${error} ${message}`);
     }
 
     response.status(status).json(errorResponse);

@@ -13,6 +13,7 @@ import { SchedulingController } from './controllers/scheduling.controller';
 import { HealthController } from './controllers/health.controller';
 import { RabbitMQService } from './messaging/rabbitmq.service';
 import { AppointmentListener } from './messaging/appointment.listener';
+import { AuthModule } from '@prenatal/common';
 
 @Module({
   imports: [
@@ -36,6 +37,8 @@ import { AppointmentListener } from './messaging/appointment.listener';
       }),
     }),
     TypeOrmModule.forFeature([Appointment, AppointmentSyncLog]),
+    // Auth Module (shared)
+    AuthModule.forRoot(),
   ],
   controllers: [AppController, SchedulingController, HealthController],
   providers: [

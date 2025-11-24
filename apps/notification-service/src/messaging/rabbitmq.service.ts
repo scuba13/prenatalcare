@@ -250,12 +250,22 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * Consome mensagens de uma fila
+   * Garante que a fila existe antes de consumir (previne race condition)
    */
   async consume(
     queueName: string,
     handler: (message: any) => Promise<void>,
   ): Promise<void> {
     await this.channelWrapper.addSetup(async (channel: ConfirmChannel) => {
+      // Garante que a fila existe antes de consumir (idempotente)
+      await channel.assertQueue(queueName, {
+        durable: true,
+        arguments: {
+          'x-message-ttl': 3600000, // 1 hora
+          'x-max-length': 10000,
+        },
+      });
+
       await channel.consume(
         queueName,
         async (msg: ConsumeMessage | null) => {

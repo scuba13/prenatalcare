@@ -1,9 +1,12 @@
-import { Controller, Get, Post, Delete, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { Controller, Get, Post, Delete, Body, Param, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard, RolesGuard, Roles, UserRole } from '@prenatal/common';
 import { ConsentsService } from './consents.service';
 import { CreateConsentDto } from './dto/create-consent.dto';
 
 @ApiTags('Consents (LGPD)')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('consents')
 export class ConsentsController {
   constructor(private readonly consentsService: ConsentsService) {}

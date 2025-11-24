@@ -1,15 +1,19 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard, RolesGuard, Roles, UserRole } from '@prenatal/common';
 import { CitizensService } from './citizens.service';
 import { CreateCitizenDto } from './dto/create-citizen.dto';
 import { UpdateCitizenDto } from './dto/update-citizen.dto';
 
 @ApiTags('Citizens')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('citizens')
 export class CitizensController {
   constructor(private readonly citizensService: CitizensService) {}
 
   @Post()
+  @Roles(UserRole.MEDICO, UserRole.ADMIN)
   @ApiOperation({ summary: 'Criar novo cidadão' })
   @ApiResponse({ status: 201, description: 'Cidadão criado com sucesso' })
   @ApiResponse({ status: 409, description: 'CPF ou CNS já cadastrado' })
@@ -89,6 +93,7 @@ export class CitizensController {
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Deletar cidadão (soft delete)' })
   @ApiParam({ name: 'id', description: 'UUID do cidadão' })
@@ -99,6 +104,7 @@ export class CitizensController {
   }
 
   @Post(':id/anonymize')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Anonimizar dados do cidadão (LGPD)' })
   @ApiParam({ name: 'id', description: 'UUID do cidadão' })
   @ApiResponse({ status: 200, description: 'Cidadão anonimizado' })

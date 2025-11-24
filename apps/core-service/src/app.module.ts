@@ -10,21 +10,13 @@ import { TasksModule } from './modules/tasks/tasks.module';
 import { ConsentsModule } from './modules/consents/consents.module';
 import { TimelineModule } from './modules/timeline/timeline.module';
 import { ObservationsModule } from './modules/observations/observations.module';
-import { LoggerModule, LogLevel } from '@prenatal/common';
+import { AuthModule } from '@prenatal/common';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-    }),
-    LoggerModule.forRoot({
-      level: process.env.NODE_ENV === 'production' ? LogLevel.INFO : LogLevel.DEBUG,
-      prettyPrint: process.env.NODE_ENV !== 'production',
-      enableFile: true,
-      enableRotation: true,
-      logDir: 'logs',
-      appName: 'core-service',
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
@@ -40,6 +32,8 @@ import { LoggerModule, LogLevel } from '@prenatal/common';
         logging: config.get('NODE_ENV') === 'development',
       }),
     }),
+    // Auth Module (shared)
+    AuthModule.forRoot(),
     // Feature Modules
     CitizensModule,
     PregnanciesModule,

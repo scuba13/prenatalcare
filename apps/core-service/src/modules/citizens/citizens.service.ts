@@ -49,15 +49,18 @@ export class CitizensService {
    * Buscar todos os cidadãos (com paginação)
    */
   async findAll(
-    page: number = 1,
-    limit: number = 20,
+    page: number | string = 1,
+    limit: number | string = 20,
     includeDeleted: boolean = false,
   ): Promise<{ data: Citizen[]; total: number; page: number; totalPages: number }> {
-    const skip = (page - 1) * limit;
+    // Garantir que page e limit são números válidos
+    const pageNum = Math.max(1, parseInt(String(page), 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(String(limit), 10) || 20));
+    const skip = (pageNum - 1) * limitNum;
 
     const [data, total] = await this.citizenRepository.findAndCount({
       skip,
-      take: limit,
+      take: limitNum,
       order: { createdAt: 'DESC' },
       withDeleted: includeDeleted,
     });
@@ -65,8 +68,8 @@ export class CitizensService {
     return {
       data,
       total,
-      page,
-      totalPages: Math.ceil(total / limit),
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
     };
   }
 

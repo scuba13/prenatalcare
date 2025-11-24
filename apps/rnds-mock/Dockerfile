@@ -7,7 +7,7 @@ COPY package*.json ./
 FROM base AS dev
 RUN npm install
 COPY . .
-EXPOSE 3003
+EXPOSE 3010
 CMD ["npm", "run", "start:dev"]
 
 # Build stage
@@ -22,5 +22,5 @@ WORKDIR /app
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/node_modules ./node_modules
 COPY package*.json ./
-EXPOSE 3003
+EXPOSE 3010
 CMD ["node", "dist/main"]

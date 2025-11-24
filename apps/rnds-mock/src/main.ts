@@ -17,8 +17,9 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(3003);
-  console.log(`🚀 RNDS Mock Server rodando em http://localhost:3003`);
-  console.log(`📚 Swagger disponível em http://localhost:3003/api`);
+  const port = process.env.PORT || 3010;
+  await app.listen(port);
+  console.log(`🚀 RNDS Mock Server rodando em http://localhost:${port}`);
+  console.log(`📚 Swagger disponível em http://localhost:${port}/api`);
 }
 bootstrap();

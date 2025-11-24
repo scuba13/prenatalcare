@@ -1,30 +1,17 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import {
-  AppLoggerService,
   AllExceptionsFilter,
   ValidationExceptionFilter,
-  LoggerInterceptor,
   RequestIdMiddleware,
   RequestLoggerMiddleware,
 } from '@prenatal/common';
 
 async function bootstrap() {
-  // Create logger BEFORE NestFactory to ensure Winston controls output
-  const customLogger = new AppLoggerService({
-    appName: 'core-service',
-    enableConsole: true,
-  });
-  customLogger.setContext('Bootstrap');
-
-  const app = await NestFactory.create(AppModule, {
-    logger: customLogger,
-  });
-
-  // Use the same logger instance
-  const logger = customLogger;
+  const app = await NestFactory.create(AppModule);
+  const logger = new Logger('Bootstrap');
 
   // Global validation pipe
   app.useGlobalPipes(
@@ -37,19 +24,14 @@ async function bootstrap() {
 
   // Global filters para tratamento de erros
   app.useGlobalFilters(
-    new AllExceptionsFilter(logger),
-    new ValidationExceptionFilter(logger),
+    new AllExceptionsFilter(),
+    new ValidationExceptionFilter(),
   );
-
-  // Global interceptor para logging de requisições
-  app.useGlobalInterceptors(new LoggerInterceptor(logger));
 
   // Middlewares
   app.use(new RequestIdMiddleware().use.bind(new RequestIdMiddleware()));
   app.use(
-    new RequestLoggerMiddleware(logger).use.bind(
-      new RequestLoggerMiddleware(logger),
-    ),
+    new RequestLoggerMiddleware().use.bind(new RequestLoggerMiddleware()),
   );
 
   // CORS

@@ -29,6 +29,9 @@ import { ReminderWorker } from './workers/reminder.worker';
 import { NotificationsController } from './controllers/notifications.controller';
 import { PreferencesController } from './controllers/preferences.controller';
 
+// Auth
+import { AuthModule } from '@prenatal/common';
+
 @Module({
   imports: [
     // Config
@@ -61,6 +64,9 @@ import { PreferencesController } from './controllers/preferences.controller';
 
     // HTTP (para chamar outros serviços)
     HttpModule,
+
+    // Auth Module (shared)
+    AuthModule.forRoot(),
   ],
   controllers: [AppController, NotificationsController, PreferencesController],
   providers: [

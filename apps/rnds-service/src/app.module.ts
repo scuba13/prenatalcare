@@ -10,21 +10,12 @@ import { WorkersModule } from './workers/workers.module';
 import { SyncCursor } from './entities/sync-cursor.entity';
 import { PublishLog } from './entities/publish-log.entity';
 import { SyncError } from './entities/sync-error.entity';
-import { LoggerModule, LogLevel } from '@prenatal/common';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-    }),
-    LoggerModule.forRoot({
-      level: process.env.NODE_ENV === 'production' ? LogLevel.INFO : LogLevel.DEBUG,
-      prettyPrint: process.env.NODE_ENV !== 'production',
-      enableFile: true,
-      enableRotation: true,
-      logDir: 'logs',
-      appName: 'rnds-service',
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],

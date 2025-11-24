@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   Logger,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -18,7 +19,9 @@ import {
   ApiParam,
   ApiQuery,
   ApiBody,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
+import { JwtAuthGuard, RolesGuard } from '@prenatal/common';
 import { SchedulingService } from '../services/scheduling.service';
 import { CreateAppointmentDto } from '../adapters/dtos/create-appointment.dto';
 import { UpdateAppointmentDto } from '../adapters/dtos/update-appointment.dto';
@@ -38,6 +41,8 @@ import { AvailableSlot } from '../adapters/types/appointment-result.type';
  * - GET /scheduling/availability - Verifica disponibilidade de horários
  */
 @ApiTags('Scheduling')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('scheduling')
 export class SchedulingController {
   private readonly logger = new Logger(SchedulingController.name);

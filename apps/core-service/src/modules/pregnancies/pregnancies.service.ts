@@ -55,8 +55,8 @@ export class PregnanciesService {
    * Buscar todas as gravidezes (com paginação)
    */
   async findAll(
-    page: number = 1,
-    limit: number = 20,
+    page: number | string = 1,
+    limit: number | string = 20,
     status?: 'active' | 'completed' | 'terminated',
   ): Promise<{
     data: Pregnancy[];
@@ -64,13 +64,16 @@ export class PregnanciesService {
     page: number;
     totalPages: number;
   }> {
-    const skip = (page - 1) * limit;
+    // Garantir que page e limit são números válidos
+    const pageNum = Math.max(1, parseInt(String(page), 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(String(limit), 10) || 20));
+    const skip = (pageNum - 1) * limitNum;
 
     const query = this.pregnancyRepository
       .createQueryBuilder('pregnancy')
       .leftJoinAndSelect('pregnancy.citizen', 'citizen')
       .skip(skip)
-      .take(limit)
+      .take(limitNum)
       .orderBy('pregnancy.createdAt', 'DESC');
 
     if (status) {
@@ -82,8 +85,8 @@ export class PregnanciesService {
     return {
       data,
       total,
-      page,
-      totalPages: Math.ceil(total / limit),
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
     };
   }
 

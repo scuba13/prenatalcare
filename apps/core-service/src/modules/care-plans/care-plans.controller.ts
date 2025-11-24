@@ -1,10 +1,13 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard, RolesGuard, Roles, UserRole } from '@prenatal/common';
 import { CarePlansService } from './care-plans.service';
 import { CreateCarePlanDto } from './dto/create-care-plan.dto';
 import { UpdateCarePlanDto } from './dto/update-care-plan.dto';
 
 @ApiTags('Care Plans')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('care-plans')
 export class CarePlansController {
   constructor(private readonly carePlansService: CarePlansService) {}

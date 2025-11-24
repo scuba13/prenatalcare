@@ -8,14 +8,18 @@ import {
   Delete,
   Query,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiQuery, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard, RolesGuard } from '@prenatal/common';
 import { ObservationsService } from './observations.service';
 import { CreateObservationDto } from './dto/create-observation.dto';
 import { UpdateObservationDto } from './dto/update-observation.dto';
 
 @Controller('observations')
 @ApiTags('Clinical Observations')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ObservationsController {
   constructor(private readonly observationsService: ObservationsService) {}
 

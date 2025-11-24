@@ -15,14 +15,18 @@ export class TasksService {
     return await this.taskRepository.save(task);
   }
 
-  async findAll(page: number = 1, limit: number = 20, status?: string) {
-    const skip = (page - 1) * limit;
+  async findAll(page: number | string = 1, limit: number | string = 20, status?: string) {
+    // Garantir que page e limit são números válidos
+    const pageNum = Math.max(1, parseInt(String(page), 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(String(limit), 10) || 20));
+    const skip = (pageNum - 1) * limitNum;
+
     const query = this.taskRepository
       .createQueryBuilder('task')
       .leftJoinAndSelect('task.pregnancy', 'pregnancy')
       .leftJoinAndSelect('pregnancy.citizen', 'citizen')
       .skip(skip)
-      .take(limit)
+      .take(limitNum)
       .orderBy('task.dueDate', 'ASC');
 
     if (status) {
@@ -30,7 +34,7 @@ export class TasksService {
     }
 
     const [data, total] = await query.getManyAndCount();
-    return { data, total, page, totalPages: Math.ceil(total / limit) };
+    return { data, total, page: pageNum, totalPages: Math.ceil(total / limitNum) };
   }
 
   async findById(id: string): Promise<Task> {

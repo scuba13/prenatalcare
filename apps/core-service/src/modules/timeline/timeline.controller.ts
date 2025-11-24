@@ -1,8 +1,11 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard, RolesGuard } from '@prenatal/common';
 import { TimelineService } from './timeline.service';
 
 @ApiTags('Timeline')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('timeline')
 export class TimelineController {
   constructor(private readonly timelineService: TimelineService) {}

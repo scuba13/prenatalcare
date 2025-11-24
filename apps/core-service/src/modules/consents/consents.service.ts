@@ -19,16 +19,20 @@ export class ConsentsService {
     return await this.consentRepository.save(consent);
   }
 
-  async findAll(page: number = 1, limit: number = 20) {
-    const skip = (page - 1) * limit;
+  async findAll(page: number | string = 1, limit: number | string = 20) {
+    // Garantir que page e limit são números válidos
+    const pageNum = Math.max(1, parseInt(String(page), 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(String(limit), 10) || 20));
+    const skip = (pageNum - 1) * limitNum;
+
     const [data, total] = await this.consentRepository.findAndCount({
       skip,
-      take: limit,
+      take: limitNum,
       relations: ['citizen'],
       order: { createdAt: 'DESC' },
     });
 
-    return { data, total, page, totalPages: Math.ceil(total / limit) };
+    return { data, total, page: pageNum, totalPages: Math.ceil(total / limitNum) };
   }
 
   async findById(id: string): Promise<Consent> {

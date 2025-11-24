@@ -9,8 +9,10 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
+      POSTGRES_MULTIPLE_DATABASES: prenatal_core,rnds_sync,prenatal_scheduling,prenatal_notifications,prenatal_auth
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./scripts/db:/docker-entrypoint-initdb.d
     networks:
       - prenatal-network
 
@@ -81,6 +83,7 @@ services:
       RABBITMQ_PORT: 5672
       RABBITMQ_USER: admin
       RABBITMQ_PASS: admin
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
     networks:
       - prenatal-network
     depends_on:
@@ -96,10 +99,16 @@ services:
     container_name: prenatal-rnds-mock
     restart: unless-stopped
     ports:
-      - "3003:3003"
+      - "3010:3010"
     environment:
       NODE_ENV: development
-      PORT: 3003
+      PORT: 3010
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3010/metadata"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
     networks:
       - prenatal-network
 
@@ -123,18 +132,22 @@ services:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
       CORE_SERVICE_URL: http://core-service:3001
       # RNDS Configuration (usando mock em desenvolvimento)
-      RNDS_BASE_URL: http://rnds-mock:3003
-      RNDS_AUTH_URL: http://rnds-mock:3003/oauth2/token
+      RNDS_BASE_URL: http://rnds-mock:3010
+      RNDS_AUTH_URL: http://rnds-mock:3010/oauth2/token
       RNDS_CLIENT_ID: mock-client
       RNDS_CLIENT_SECRET: mock-secret
       RNDS_USE_MTLS: "false"
     networks:
       - prenatal-network
     depends_on:
-      - postgres
-      - rabbitmq
-      - rnds-mock
-      - core-service
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      rnds-mock:
+        condition: service_healthy
+      core-service:
+        condition: service_started
 
   scheduling-service:
     build:
@@ -156,6 +169,7 @@ services:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
       ADAPTER_TYPE: mock
       ADAPTER_RETRY_ATTEMPTS: 3
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
     networks:
       - prenatal-network
     depends_on:
@@ -181,6 +195,7 @@ services:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
       CORE_SERVICE_URL: http://core-service:3001
       SCHEDULING_SERVICE_URL: http://scheduling-service:3003
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
       # Firebase (Mock Mode - deixar vazio)
       FIREBASE_PROJECT_ID: ""
       FIREBASE_CLIENT_EMAIL: ""
@@ -192,6 +207,32 @@ services:
       - rabbitmq
       - core-service
       - scheduling-service
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: apps/auth-service/Dockerfile
+    container_name: prenatal-auth-service
+    restart: unless-stopped
+    ports:
+      - "3005:3005"
+    environment:
+      NODE_ENV: production
+      PORT: 3005
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_NAME: prenatal_auth
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      JWT_ACCESS_EXPIRATION: 15m
+      JWT_REFRESH_EXPIRATION: 7d
+      BCRYPT_SALT_ROUNDS: 10
+      CORE_SERVICE_URL: http://core-service:3001
+    networks:
+      - prenatal-network
+    depends_on:
+      - postgres
 
 volumes:
   pgdata:

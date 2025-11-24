@@ -3,10 +3,26 @@ import {
   Catch,
   ArgumentsHost,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
-import { AppLoggerService } from '../logger/logger.service';
-import { ErrorResponse, ValidationError } from '../interfaces/error-response.interface';
+import { Request, Response} from 'express';
+
+interface ValidationError {
+  field: string;
+  value?: any;
+  constraints: string[];
+}
+
+interface ErrorResponse {
+  timestamp: string;
+  path: string;
+  method: string;
+  statusCode: number;
+  error: string;
+  message: string | string[];
+  requestId?: string;
+  details?: ValidationError[];
+}
 
 /**
  * Filter para capturar erros de validação (class-validator)
@@ -14,9 +30,9 @@ import { ErrorResponse, ValidationError } from '../interfaces/error-response.int
  */
 @Catch(BadRequestException)
 export class ValidationExceptionFilter implements ExceptionFilter {
-  constructor(private readonly logger: AppLoggerService) {
-    this.logger.setContext('ValidationExceptionFilter');
-  }
+  private readonly logger = new Logger('ValidationExceptionFilter');
+
+  constructor() {}
 
   catch(exception: BadRequestException, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
@@ -56,13 +72,7 @@ export class ValidationExceptionFilter implements ExceptionFilter {
     };
 
     // Log de validação
-    this.logger.warn(`Validation Error on ${request.method} ${request.url}`, {
-      path: request.url,
-      method: request.method,
-      statusCode: status,
-      validationErrors,
-      requestId: errorResponse.requestId,
-    });
+    this.logger.warn(`Validation Error on ${request.method} ${request.url}`);
 
     response.status(status).json(errorResponse);
   }
