@@ -10,6 +10,9 @@ import { TasksModule } from './modules/tasks/tasks.module';
 import { ConsentsModule } from './modules/consents/consents.module';
 import { TimelineModule } from './modules/timeline/timeline.module';
 import { ObservationsModule } from './modules/observations/observations.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { AlertsModule } from './modules/alerts/alerts.module';
+import { InternalModule } from './modules/internal/internal.module';
 import { AuthModule } from '@prenatal/common';
 
 @Module({
@@ -42,6 +45,9 @@ import { AuthModule } from '@prenatal/common';
     ConsentsModule,
     TimelineModule,
     ObservationsModule,
+    DashboardModule,
+    AlertsModule,
+    InternalModule,
   ],
   controllers: [AppController],
   providers: [AppService],

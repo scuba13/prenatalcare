@@ -17,6 +17,12 @@ async function bootstrap() {
     }),
   );
 
+  // Global prefix
+  app.setGlobalPrefix('api/v1');
+
+  // CORS
+  app.enableCors();
+
   // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle('Scheduling Service API')

@@ -234,6 +234,30 @@ services:
     depends_on:
       - postgres
 
+  web-medico:
+    build:
+      context: ./apps/web-medico
+      dockerfile: Dockerfile
+      target: dev
+    container_name: prenatal-web-medico
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      VITE_AUTH_API_URL: http://localhost:3005
+      VITE_CORE_API_URL: http://localhost:3001
+      VITE_SCHEDULING_API_URL: http://localhost:3003
+      VITE_NOTIFICATION_API_URL: http://localhost:3004
+      VITE_RNDS_API_URL: http://localhost:3002
+    networks:
+      - prenatal-network
+    depends_on:
+      - core-service
+      - auth-service
+      - scheduling-service
+      - notification-service
+
 volumes:
   pgdata:
     driver: local

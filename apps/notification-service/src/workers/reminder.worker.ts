@@ -198,7 +198,7 @@ export class ReminderWorker {
       const dateStr = tomorrow.toISOString().split('T')[0]; // YYYY-MM-DD
 
       const response = await firstValueFrom(
-        this.httpService.get(`${this.schedulingServiceUrl}/appointments`, {
+        this.httpService.get(`${this.schedulingServiceUrl}/api/v1/scheduling/appointments`, {
           params: {
             date: dateStr,
             status: 'confirmed',
@@ -235,7 +235,7 @@ export class ReminderWorker {
   private async fetchUpcomingTasks(): Promise<any[]> {
     try {
       const response = await firstValueFrom(
-        this.httpService.get(`${this.coreServiceUrl}/tasks/due-soon`, {
+        this.httpService.get(`${this.coreServiceUrl}/api/v1/internal/tasks/due-soon`, {
           params: {
             days: 7, // Próximos 7 dias
           },

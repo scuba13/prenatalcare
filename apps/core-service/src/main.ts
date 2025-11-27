@@ -34,6 +34,9 @@ async function bootstrap() {
     new RequestLoggerMiddleware().use.bind(new RequestLoggerMiddleware()),
   );
 
+  // Global prefix
+  app.setGlobalPrefix('api/v1');
+
   // CORS
   app.enableCors();
 

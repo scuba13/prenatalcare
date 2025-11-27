@@ -115,7 +115,7 @@ export class SyncWorker {
   private async fetchActivePregnancies(): Promise<any[]> {
     try {
       const response = await firstValueFrom(
-        this.httpService.get(`${this.coreServiceUrl}/pregnancies`, {
+        this.httpService.get(`${this.coreServiceUrl}/api/v1/internal/pregnancies`, {
           params: {
             status: 'active',
             page: 1,

@@ -215,6 +215,32 @@ export class SchedulingController {
   }
 
   /**
+   * Lista agendamentos de uma data específica
+   */
+  @Get('appointments/date/:date')
+  @ApiOperation({
+    summary: 'Listar agendamentos por data',
+    description: 'Retorna todos os agendamentos de uma data específica',
+  })
+  @ApiParam({
+    name: 'date',
+    description: 'Data (YYYY-MM-DD)',
+    type: String,
+    example: '2025-11-27',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lista de agendamentos',
+    type: [Appointment],
+  })
+  async getAppointmentsByDate(
+    @Param('date') date: string,
+  ): Promise<Appointment[]> {
+    this.logger.log(`GET /scheduling/appointments/date/${date}`);
+    return this.schedulingService.getAppointmentsByDate(date);
+  }
+
+  /**
    * Verifica disponibilidade de horários
    */
   @Get('availability')

@@ -318,6 +318,26 @@ export class SchedulingService {
   }
 
   /**
+   * Busca agendamentos de uma data específica
+   */
+  async getAppointmentsByDate(date: string): Promise<Appointment[]> {
+    this.logger.log(`Fetching appointments for date ${date}`);
+
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    return this.appointmentRepository
+      .createQueryBuilder('appointment')
+      .where('appointment.scheduledAt >= :startOfDay', { startOfDay })
+      .andWhere('appointment.scheduledAt <= :endOfDay', { endOfDay })
+      .orderBy('appointment.scheduledAt', 'ASC')
+      .getMany();
+  }
+
+  /**
    * Verifica disponibilidade de horários
    */
   async checkAvailability(

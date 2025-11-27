@@ -32,7 +32,7 @@ import { Public } from '../decorators/public.decorator';
  * Endpoints para registro, login, refresh e logout.
  */
 @ApiTags('Auth')
-@Controller('api/v1/auth')
+@Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 

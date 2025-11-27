@@ -1,6 +1,8 @@
 # Multi-stage build for Scheduling Service
-FROM node:18-alpine AS deps
+FROM node:18-alpine AS base
 
+# Dependencies stage
+FROM base AS deps
 WORKDIR /app
 
 # Copy root level package files
@@ -31,12 +33,15 @@ WORKDIR /app/libs/common
 RUN npm run build
 
 # Stage 2: Builder
-FROM node:18-alpine AS builder
+FROM base AS builder
 
 WORKDIR /app
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/apps/scheduling-service/node_modules ./node_modules
+
+# Copy common library (compiled) into node_modules structure for TypeScript resolution
+COPY --from=deps /app/libs/common ./node_modules/@prenatal/common
 
 # Copy service source code
 COPY --from=deps /app/apps/scheduling-service/package*.json ./
@@ -48,17 +53,23 @@ COPY apps/scheduling-service/nest-cli.json ./
 RUN npm run build
 
 # Stage 3: Production
-FROM node:18-alpine
+FROM base
 
 # Install dumb-init for proper signal handling
 RUN apk add --no-cache dumb-init
 
 WORKDIR /app
 
+# Set NODE_ENV
+ENV NODE_ENV=production
+
 # Copy node_modules and built application
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
+
+# Copy common library into node_modules (must be separate to preserve structure)
+COPY --from=deps /app/libs/common ./node_modules/@prenatal/common
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
